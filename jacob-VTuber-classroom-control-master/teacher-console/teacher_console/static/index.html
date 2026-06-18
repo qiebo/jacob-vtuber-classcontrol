@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>课堂设备工作台</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div id="login-overlay" class="login-overlay" style="display:none;">
+      <form id="login-form" class="login-card">
+        <h2>Jacob VTuber 课堂管控台</h2>
+        <p class="login-subtitle">请登录</p>
+        <label>用户名
+          <input id="login-username" type="text" autocomplete="off" value="ybszr" required />
+        </label>
+        <label>密码
+          <input id="login-password" type="password" autocomplete="off" value="123456" required />
+        </label>
+        <p id="login-error" class="login-error" role="alert"></p>
+        <button type="submit" class="primary-button">登录</button>
+      </form>
+    </div>
+    <aside class="sidebar">
+      <header class="brand">
+        <strong>课堂设备工作台</strong>
+        <span>Jacob VTuber 教师端</span>
+      </header>
+
+      <section class="sidebar-section" aria-labelledby="device-form-title">
+        <div class="section-heading">
+          <h2 id="device-form-title">添加或更新设备</h2>
+          <button id="clear-device-form" class="text-button" type="button">清空</button>
+        </div>
+        <form id="device-form" class="stack-form">
+          <div class="field-row">
+            <label>
+              设备编号
+              <input name="id" placeholder="pi-01" autocomplete="off" required />
+            </label>
+            <label>
+              设备名称
+              <input name="name" placeholder="第一组" autocomplete="off" required />
+            </label>
+          </div>
+          <label>
+            访问地址
+            <input name="base_url" type="url" placeholder="http://192.168.1.101:12393" required />
+          </label>
+          <div class="field-row">
+            <label>
+              分组
+              <input name="group" placeholder="一班" autocomplete="off" />
+            </label>
+            <label>
+              访问令牌
+              <input name="token" type="password" placeholder="更新时可留空" autocomplete="new-password" />
+            </label>
+          </div>
+          <label class="check-label">
+            <input name="enabled" type="checkbox" checked />
+            <span>启用此设备</span>
+          </label>
+          <button class="primary-button" type="submit">保存设备</button>
+        </form>
+      </section>
+
+      <section class="sidebar-section" aria-labelledby="discover-title">
+        <div class="section-heading">
+          <h2 id="discover-title">局域网发现</h2>
+          <span id="discover-count" class="section-note"></span>
+        </div>
+        <form id="discover-form" class="stack-form">
+          <div class="field-row discover-fields">
+            <label>
+              CIDR 网段
+              <input name="cidr" value="192.168.1.0/24" required />
+            </label>
+            <label>
+              端口
+              <input name="port" type="number" value="12393" min="1" max="65535" required />
+            </label>
+          </div>
+          <label>
+            扫描令牌
+            <input name="token" type="password" placeholder="没有可留空" autocomplete="new-password" />
+          </label>
+          <label>
+            导入分组
+            <input name="group" placeholder="例如：三年级一班" autocomplete="off" />
+          </label>
+          <button id="discover-button" class="secondary-button" type="submit">扫描设备</button>
+        </form>
+        <div id="discover-results" class="discover-results" aria-live="polite"></div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="title-block">
+          <h1>设备总览</h1>
+          <p id="last-refresh">尚未刷新</p>
+        </div>
+        <div class="stats" aria-label="设备统计">
+          <div><span id="stat-total">0</span><small>设备</small></div>
+          <div><span id="stat-online">0</span><small>在线</small></div>
+          <div><span id="stat-offline">0</span><small>离线</small></div>
+          <div><span id="stat-dirty">0</span><small>未保存</small></div>
+          <div><span id="stat-selected">0</span><small>已选</small></div>
+        </div>
+      </header>
+
+      <section class="command-bar" aria-label="设备批量操作">
+        <div class="selection-control">
+          <label class="check-label select-all-label">
+            <input id="select-all" type="checkbox" />
+            <span>全选</span>
+          </label>
+          <strong id="selection-summary">已选 0 台</strong>
+        </div>
+        <div class="batch-actions">
+          <button id="batch-lock" type="button">锁定</button>
+          <button id="batch-unlock" type="button">解锁</button>
+          <button id="batch-collect" type="button">收集作品</button>
+        </div>
+        <div class="file-actions">
+          <input id="distribution-file" class="visually-hidden" type="file" />
+          <label for="distribution-file" class="file-picker">选择文件</label>
+          <span id="file-name" title="未选择文件">未选择文件</span>
+          <button id="distribute-file" type="button" disabled>分发</button>
+        </div>
+        <div class="refresh-controls">
+          <label class="toggle-label">
+            <input id="auto-refresh" type="checkbox" checked />
+            <span>自动刷新</span>
+          </label>
+          <button id="refresh-all" class="primary-button" type="button">立即刷新</button>
+        </div>
+      </section>
+
+      <div id="message" class="message" role="status" aria-live="polite"></div>
+      <section id="device-grid" class="device-grid" aria-label="设备列表"></section>
+    </main>
+
+    <template id="device-card-template">
+      <article class="device-card">
+        <div class="card-head">
+          <label class="card-check" title="选择设备">
+            <input class="device-select" type="checkbox" />
+            <span class="visually-hidden">选择设备</span>
+          </label>
+          <div class="device-heading">
+            <h2 class="device-name"></h2>
+            <p class="device-id"></p>
+          </div>
+          <span class="connection-state"></span>
+        </div>
+        <div class="snapshot-wrap">
+          <img class="snapshot" alt="学生端实时快照" loading="lazy" />
+          <div class="snapshot-empty">暂无快照</div>
+          <span class="snapshot-time"></span>
+        </div>
+        <div class="card-body">
+          <div class="identity-row">
+            <div>
+              <span class="eyebrow">学生</span>
+              <strong class="student">未载入档案</strong>
+            </div>
+            <div>
+              <span class="eyebrow">角色</span>
+              <strong class="character">-</strong>
+            </div>
+          </div>
+          <div class="state-tags">
+            <span class="save-state">保存状态未知</span>
+            <span class="submit-state">提交状态未知</span>
+            <span class="lock-state">锁定状态未知</span>
+          </div>
+          <dl class="device-meta">
+            <div><dt>延迟</dt><dd class="latency">-</dd></div>
+            <div><dt>最后在线</dt><dd class="last-seen">从未</dd></div>
+            <div><dt>地址</dt><dd class="device-url"></dd></div>
+          </dl>
+          <p class="error" hidden></p>
+          <div class="card-actions">
+            <button class="refresh-button" type="button">刷新</button>
+            <button class="lock-button" type="button">锁定</button>
+            <button class="collect-button" type="button">收集</button>
+            <button class="edit-button" type="button">编辑</button>
+            <button class="delete-button danger-button" type="button">删除</button>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

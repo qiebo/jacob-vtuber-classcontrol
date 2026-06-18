@@ -1,0 +1,70 @@
+[
+    {
+        "name": "mao_pro",
+        "description": "",
+        "url": "/live2d-models/mao_pro/runtime/mao_pro.model3.json",
+        "kScale": 0.5,
+        "initialXshift": 0,
+        "initialYshift": 0,
+        "kXOffset": 1150,
+        "idleMotionGroupName": "Idle",
+        "emotionMap": {
+            "neutral": 0,
+            "anger": 2,
+            "disgust": 2,
+            "fear": 1,
+            "joy": 3,
+            "smirk": 3,
+            "sadness": 1,
+            "surprise": 3
+        },
+        "tapMotions": {
+            "HitAreaHead": {
+                "": 1
+            },
+            "HitAreaBody": {
+                "": 1
+            }
+        }
+    },
+    {
+        "name": "shizuku",
+        "description": "Uploaded Live2D model",
+        "url": "/live2d-models/shizuku/runtime/shizuku.model3.json",
+        "kScale": 0.5,
+        "initialXshift": 0,
+        "initialYshift": 0,
+        "idleMotionGroupName": "Idle",
+        "emotionMap": {
+            "neutral": 0,
+            "joy": 0,
+            "sadness": 0,
+            "anger": 0,
+            "surprise": 0,
+            "fear": 0,
+            "disgust": 0,
+            "smirk": 0
+        },
+        "tapMotions": {}
+    },
+    {
+        "name": "xiao_yi",
+        "description": "Uploaded Live2D model",
+        "url": "/live2d-models/xiao_yi/xiao_yi/runtime/normal.model3.json",
+        "kScale": 0.5,
+        "initialXshift": 0,
+        "initialYshift": 0,
+        "idleMotionGroupName": "Idle",
+        "emotionMap": {
+            "neutral": 0,
+            "joy": 0,
+            "sadness": 0,
+            "anger": 0,
+            "surprise": 0,
+            "fear": 0,
+            "disgust": 0,
+            "smirk": 0
+        },
+        "tapMotions": {}
+    }
+]

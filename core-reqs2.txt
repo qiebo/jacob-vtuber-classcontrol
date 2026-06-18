@@ -1,0 +1,18 @@
+# 管控联调核心依赖(最小集:让 run_server.py 起来 + classroom 接口可用)
+# 去掉重型 ML 包(torch/sherpa-onnx/onnxruntime/numpy/scipy)和会拖 aiohttp 的 edge-tts
+fastapi==0.128.0
+uvicorn==0.40.0
+httpx==0.28.1
+python-multipart>=0.0.9,<1
+pyyaml==6.0.3
+ruamel-yaml==0.19.1
+loguru==0.7.3
+tomli==2.4.0
+websocket-client==1.9.0
+requests==2.32.5
+pillow==11.3.0
+pydub==0.25.1
+tqdm==4.67.1
+langdetect==1.0.9
+pysbd==0.3.4
+chardet==5.2.0

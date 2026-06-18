@@ -1,0 +1,967 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>教学数智人触控界面效果图</title>
+  <style>
+    :root {
+      --ink: #f8fafc;
+      --muted: #aeb8c6;
+      --panel: rgba(18, 24, 30, 0.94);
+      --panel-2: rgba(28, 37, 44, 0.96);
+      --line: rgba(255, 255, 255, 0.14);
+      --line-strong: rgba(109, 222, 190, 0.72);
+      --teal: #5ddfc2;
+      --teal-2: #0f766e;
+      --amber: #f8c35b;
+      --red: #ef4444;
+      --green: #56d364;
+      --shadow: 0 22px 60px rgba(0, 0, 0, 0.42);
+      --radius: 8px;
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 16% 8%, rgba(93, 223, 194, 0.12), transparent 28%),
+        radial-gradient(circle at 90% 2%, rgba(248, 195, 91, 0.10), transparent 24%),
+        #101417;
+    }
+
+    .page {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(420px, 1fr));
+      gap: 28px;
+      padding: 28px;
+      align-items: start;
+    }
+
+    .artboard {
+      width: 430px;
+      height: 820px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 24px;
+      border: 12px solid #171b1f;
+      box-shadow: var(--shadow);
+      background: #0d1416;
+      isolation: isolate;
+    }
+
+    .stage-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(3, 7, 18, 0.38)),
+        url("../../backgrounds/lernado-diff-classroom-center.jpeg");
+      background-size: cover;
+      background-position: center;
+      z-index: 0;
+    }
+
+    .stage-bg.landscape {
+      background-image:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(3, 7, 18, 0.34)),
+        url("../../backgrounds/mountain-range-illustration.jpeg");
+    }
+
+    .status-pill {
+      position: absolute;
+      left: 18px;
+      top: 18px;
+      z-index: 3;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      background: rgba(16, 22, 27, 0.74);
+      backdrop-filter: blur(14px);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(86, 211, 100, 0.18);
+    }
+
+    .avatar {
+      position: absolute;
+      left: 50%;
+      bottom: 212px;
+      z-index: 1;
+      width: 210px;
+      height: 300px;
+      transform: translateX(-50%);
+      display: grid;
+      place-items: center;
+    }
+
+    .avatar-card {
+      width: 190px;
+      height: 254px;
+      border-radius: 42% 42% 30% 30%;
+      background:
+        radial-gradient(circle at 48% 22%, #ffd7bd 0 24%, transparent 25%),
+        radial-gradient(circle at 35% 18%, #2b1d1a 0 19%, transparent 20%),
+        linear-gradient(160deg, #eef8f5 0 36%, #bfe6e2 36% 100%);
+      border: 6px solid rgba(255, 255, 255, 0.88);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      position: relative;
+    }
+
+    .avatar-card::before,
+    .avatar-card::after {
+      content: "";
+      position: absolute;
+      top: 70px;
+      width: 18px;
+      height: 22px;
+      border-radius: 50%;
+      background: #221717;
+      box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.35);
+    }
+
+    .avatar-card::before { left: 54px; }
+    .avatar-card::after { right: 54px; }
+
+    .stage-arrow {
+      position: absolute;
+      z-index: 2;
+      top: 52%;
+      width: 42px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+      background: rgba(20, 29, 31, 0.42);
+      backdrop-filter: blur(8px);
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .stage-arrow.left { left: 18px; }
+    .stage-arrow.right { right: 18px; }
+
+    .footer-bar {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      bottom: 64px;
+      z-index: 4;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border-radius: 16px;
+      background: rgba(16, 25, 29, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(14px);
+    }
+
+    .footer-btn {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius);
+      color: white;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .mic { background: var(--red); }
+    .light { background: var(--amber); color: #281800; }
+    .power { background: #f04428; }
+
+    .input {
+      flex: 1;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-radius: var(--radius);
+      color: #dbe4ed;
+      background: rgba(5, 18, 25, 0.62);
+      font-size: 17px;
+    }
+
+    .drawer {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 6;
+      width: 356px;
+      display: flex;
+      flex-direction: column;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      box-shadow: 18px 0 42px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(20px);
+    }
+
+    .drawer.right {
+      left: auto;
+      right: 0;
+      width: 360px;
+      border-right: 0;
+      border-left: 1px solid var(--line);
+    }
+
+    .drawer-head {
+      padding: 22px 22px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-title {
+      font-size: 23px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .close {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 22px;
+      color: #d9e4e8;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow: hidden;
+      padding: 0 18px 14px;
+    }
+
+    .tab {
+      min-width: 62px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      padding: 0 12px;
+      border-radius: var(--radius);
+      color: #bac6ce;
+      font-size: 17px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .tab.active {
+      color: #07241f;
+      background: var(--teal);
+      box-shadow: 0 8px 22px rgba(93, 223, 194, 0.22);
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow: hidden;
+      padding: 0 18px 18px;
+    }
+
+    .section-title {
+      margin: 10px 0 12px;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .person-card,
+    .voice-card,
+    .setting-row,
+    .kb-row {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.075);
+    }
+
+    .person-card {
+      min-height: 154px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+
+    .person-card.active,
+    .voice-card.active {
+      border-color: var(--line-strong);
+      box-shadow: inset 0 0 0 2px rgba(93, 223, 194, 0.18);
+      background: rgba(93, 223, 194, 0.12);
+    }
+
+    .thumb {
+      height: 78px;
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background:
+        linear-gradient(145deg, rgba(93, 223, 194, 0.32), rgba(248, 195, 91, 0.18)),
+        rgba(255, 255, 255, 0.08);
+    }
+
+    .thumb img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+    }
+
+    .live2d-mark {
+      width: 54px;
+      height: 68px;
+      border-radius: 42% 42% 28% 28%;
+      background:
+        radial-gradient(circle at 52% 24%, #ffd0b4 0 28%, transparent 29%),
+        linear-gradient(160deg, #ecfdf5 0 38%, #7dd3c7 38% 100%);
+      border: 4px solid rgba(255, 255, 255, 0.86);
+    }
+
+    .card-name {
+      font-size: 17px;
+      line-height: 1.2;
+      font-weight: 800;
+      color: #f7fbfc;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .tag {
+      min-height: 24px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      color: #dce7ea;
+      background: rgba(255, 255, 255, 0.10);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .tag.current {
+      color: #06241f;
+      background: var(--teal);
+    }
+
+    .add-card {
+      min-height: 78px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed rgba(93, 223, 194, 0.62);
+      border-radius: var(--radius);
+      background: rgba(93, 223, 194, 0.08);
+      color: #dffdf6;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .bottom-actions {
+      display: flex;
+      gap: 10px;
+      padding: 14px 18px 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .action {
+      flex: 1;
+      height: 52px;
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .cancel { background: rgba(239, 68, 68, 0.20); color: #fecaca; }
+    .save { background: var(--teal); color: #06241f; }
+
+    .segmented {
+      height: 52px;
+      padding: 5px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .segment {
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      color: #bdc8cf;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .segment.active {
+      color: #07241f;
+      background: var(--teal);
+    }
+
+    .voice-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .voice-card {
+      min-height: 94px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr 54px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .voice-name {
+      font-size: 19px;
+      font-weight: 850;
+      margin-bottom: 7px;
+    }
+
+    .voice-id {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .play {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius);
+      color: #06241f;
+      background: var(--amber);
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .slider-block {
+      margin: 16px 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .slider-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .slider {
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--teal) 0 58%, rgba(255, 255, 255, 0.18) 58% 100%);
+      position: relative;
+    }
+
+    .slider::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 58%;
+      width: 28px;
+      height: 28px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: #f8fafc;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32);
+    }
+
+    .fold {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.06);
+      font-size: 17px;
+      font-weight: 800;
+      color: #d8e5e9;
+    }
+
+    .setting-group {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .setting-row {
+      min-height: 64px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .setting-label {
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.28;
+    }
+
+    .setting-desc {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .switch {
+      width: 58px;
+      height: 34px;
+      border-radius: 999px;
+      padding: 4px;
+      flex: 0 0 auto;
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .switch.on {
+      background: var(--teal-2);
+    }
+
+    .knob {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: white;
+      transform: translateX(0);
+    }
+
+    .switch.on .knob {
+      transform: translateX(24px);
+    }
+
+    .subtitle-shell {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 154px;
+      z-index: 5;
+      min-height: 154px;
+      padding: 16px 16px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 16px;
+      background: rgba(16, 24, 29, 0.78);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+    }
+
+    .wave-row {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .wave {
+      width: 86px;
+      height: 30px;
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .bar {
+      width: 7px;
+      border-radius: 999px;
+      background: var(--teal);
+      box-shadow: 0 0 14px rgba(93, 223, 194, 0.56);
+    }
+
+    .bar:nth-child(1) { height: 12px; }
+    .bar:nth-child(2) { height: 22px; }
+    .bar:nth-child(3) { height: 28px; }
+    .bar:nth-child(4) { height: 18px; }
+    .bar:nth-child(5) { height: 25px; }
+    .bar:nth-child(6) { height: 14px; }
+
+    .listen-text {
+      color: #dffdf6;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .chat {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bubble {
+      max-width: 92%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 18px;
+      line-height: 1.55;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+    }
+
+    .bubble.user {
+      margin-left: auto;
+      color: #ffffff;
+      background: rgba(54, 70, 80, 0.92);
+      border-bottom-right-radius: 6px;
+    }
+
+    .bubble.ai {
+      margin-right: auto;
+      color: #fffaf0;
+      background: rgba(146, 91, 21, 0.86);
+      border-bottom-left-radius: 6px;
+    }
+
+    .right-panel-title {
+      position: absolute;
+      right: 28px;
+      top: 26px;
+      z-index: 5;
+      padding: 10px 14px;
+      border-radius: 999px;
+      color: #06241f;
+      background: var(--teal);
+      font-size: 15px;
+      font-weight: 900;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+    }
+
+    .caption {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      z-index: 8;
+      color: rgba(255, 255, 255, 0.70);
+      font-size: 13px;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    @media print {
+      body { background: #111; }
+      .page { display: block; padding: 0; }
+      .artboard { margin: 0; break-after: page; }
+    }
+
+    body.export-mode {
+      width: 430px;
+      height: 820px;
+      overflow: hidden;
+      background: #101417;
+    }
+
+    body.export-mode .page {
+      display: block;
+      width: 430px;
+      height: 820px;
+      padding: 0;
+    }
+
+    body.export-mode .artboard {
+      border-radius: 0;
+      border: 0;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="artboard" id="mockup-stage">
+      <div class="stage-bg landscape"></div>
+      <div class="status-pill"><span class="dot"></span><span>已连接</span></div>
+      <div class="stage-arrow left">‹</div>
+      <div class="stage-arrow right">›</div>
+      <div class="avatar"><div class="avatar-card"></div></div>
+      <div class="subtitle-shell">
+        <div class="chat">
+          <div class="bubble ai">我们先看这张图里的山谷和光线，你能说说它像哪个季节吗？</div>
+        </div>
+      </div>
+      <div class="footer-bar">
+        <div class="footer-btn mic">麦</div>
+        <div class="footer-btn light">灯</div>
+        <div class="footer-btn power">关</div>
+        <div class="input">输入您的消息...</div>
+      </div>
+
+      <aside class="drawer">
+        <div class="drawer-head">
+          <div class="drawer-title">设置</div>
+          <div class="close">×</div>
+        </div>
+        <div class="tabs">
+          <div class="tab active">舞台</div>
+          <div class="tab">性格</div>
+          <div class="tab">声音</div>
+          <div class="tab">知识库</div>
+        </div>
+        <div class="drawer-body">
+          <div class="section-title">人物形象</div>
+          <div class="grid-2">
+            <div class="person-card active">
+              <div class="thumb"><div class="live2d-mark"></div></div>
+              <div class="card-name">小翼老师</div>
+              <div class="tag-row"><span class="tag">Live2D</span><span class="tag current">使用中</span></div>
+            </div>
+            <div class="person-card">
+              <div class="thumb"><img src="../../avatars/mao.png" alt="" /></div>
+              <div class="card-name">Mao</div>
+              <div class="tag-row"><span class="tag">帧序列</span></div>
+            </div>
+            <div class="person-card">
+              <div class="thumb"><img src="../../avatars/shizuku.png" alt="" /></div>
+              <div class="card-name">Shizuku</div>
+              <div class="tag-row"><span class="tag">Live2D</span></div>
+            </div>
+            <div class="add-card">上传人物</div>
+          </div>
+
+          <div class="section-title">舞台背景</div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">山谷课堂</div>
+              <div class="setting-desc">当前背景，适合讲解自然主题</div>
+            </div>
+            <span class="tag current">使用中</span>
+          </div>
+        </div>
+        <div class="bottom-actions">
+          <div class="action cancel">取消</div>
+          <div class="action save">保存</div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="artboard" id="mockup-voice">
+      <div class="stage-bg"></div>
+      <div class="avatar"><div class="avatar-card"></div></div>
+      <div class="footer-bar">
+        <div class="footer-btn mic">麦</div>
+        <div class="footer-btn light">灯</div>
+        <div class="footer-btn power">关</div>
+        <div class="input">输入您的消息...</div>
+      </div>
+
+      <aside class="drawer">
+        <div class="drawer-head">
+          <div class="drawer-title">设置</div>
+          <div class="close">×</div>
+        </div>
+        <div class="tabs">
+          <div class="tab">舞台</div>
+          <div class="tab">性格</div>
+          <div class="tab active">声音</div>
+          <div class="tab">知识库</div>
+        </div>
+        <div class="drawer-body">
+          <div class="section-title">声音引擎</div>
+          <div class="segmented">
+            <div class="segment active">Edge</div>
+            <div class="segment">火山</div>
+            <div class="segment">阿里云</div>
+          </div>
+
+          <div class="section-title">常用声音</div>
+          <div class="voice-list">
+            <div class="voice-card active">
+              <div>
+                <div class="voice-name">晓晓</div>
+                <div class="tag-row"><span class="tag current">推荐</span><span class="tag">女声</span></div>
+                <div class="voice-id">zh-CN-XiaoxiaoNeural</div>
+              </div>
+              <div class="play">听</div>
+            </div>
+            <div class="voice-card">
+              <div>
+                <div class="voice-name">云希</div>
+                <div class="tag-row"><span class="tag">男声</span><span class="tag">温和</span></div>
+                <div class="voice-id">zh-CN-YunxiNeural</div>
+              </div>
+              <div class="play">听</div>
+            </div>
+            <div class="voice-card">
+              <div>
+                <div class="voice-name">晓伊</div>
+                <div class="tag-row"><span class="tag">女声</span><span class="tag">清晰</span></div>
+                <div class="voice-id">zh-CN-XiaoyiNeural</div>
+              </div>
+              <div class="play">听</div>
+            </div>
+          </div>
+
+          <div class="slider-block">
+            <div class="slider-top"><span>语速</span><span>1.0x</span></div>
+            <div class="slider"></div>
+          </div>
+
+          <div class="fold"><span>高级参数</span><span>展开</span></div>
+        </div>
+        <div class="bottom-actions">
+          <div class="action cancel">取消</div>
+          <div class="action save">保存</div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="artboard" id="mockup-config">
+      <div class="stage-bg landscape"></div>
+      <div class="status-pill"><span class="dot"></span><span>空闲</span></div>
+      <div class="avatar"><div class="avatar-card"></div></div>
+      <div class="footer-bar">
+        <div class="footer-btn mic">麦</div>
+        <div class="footer-btn light">灯</div>
+        <div class="footer-btn power">关</div>
+        <div class="input">输入您的消息...</div>
+      </div>
+
+      <aside class="drawer">
+        <div class="drawer-head">
+          <div class="drawer-title">设置</div>
+          <div class="close">×</div>
+        </div>
+        <div class="tabs">
+          <div class="tab">舞台</div>
+          <div class="tab">性格</div>
+          <div class="tab">声音</div>
+          <div class="tab active">配置</div>
+        </div>
+        <div class="drawer-body">
+          <div class="section-title">语音交互</div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">AI 说话时关闭麦克风</div>
+                <div class="setting-desc">减少扬声器回声造成的误识别</div>
+              </div>
+              <div class="switch on"><div class="knob"></div></div>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">对话结束后自动聆听</div>
+                <div class="setting-desc">适合连续课堂问答</div>
+              </div>
+              <div class="switch on"><div class="knob"></div></div>
+            </div>
+          </div>
+
+          <div class="section-title">显示与字幕</div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">显示字幕</div>
+                <div class="setting-desc">右侧区域显示对话内容</div>
+              </div>
+              <div class="switch on"><div class="knob"></div></div>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">群组管理入口</div>
+                <div class="setting-desc">课堂单机模式可关闭</div>
+              </div>
+              <div class="switch"><div class="knob"></div></div>
+            </div>
+          </div>
+
+          <div class="fold"><span>连接与服务</span><span>展开</span></div>
+        </div>
+        <div class="bottom-actions">
+          <div class="action cancel">取消</div>
+          <div class="action save">保存</div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="artboard" id="mockup-subtitle">
+      <div class="stage-bg landscape"></div>
+      <div class="status-pill"><span class="dot"></span><span>聆听中</span></div>
+      <div class="right-panel-title">字幕区</div>
+      <div class="stage-arrow left">‹</div>
+      <div class="stage-arrow right">›</div>
+      <div class="avatar"><div class="avatar-card"></div></div>
+      <div class="subtitle-shell">
+        <div class="wave-row">
+          <div class="wave" aria-hidden="true">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+          <div class="listen-text">正在聆听</div>
+        </div>
+        <div class="chat">
+          <div class="bubble user">老师，我想让它讲得慢一点。</div>
+          <div class="bubble ai">好的，我会放慢语速，并把重点拆成更短的步骤。</div>
+        </div>
+      </div>
+      <div class="footer-bar">
+        <div class="footer-btn mic">麦</div>
+        <div class="footer-btn light">灯</div>
+        <div class="footer-btn power">关</div>
+        <div class="input">输入您的消息...</div>
+      </div>
+      <div class="caption">字幕区域左上角加入声波状态，正文保持大字号和稳定容器。</div>
+    </section>
+  </main>
+  <script>
+    const target = window.location.hash.replace("#", "");
+    if (target) {
+      document.body.classList.add("export-mode");
+      document.querySelectorAll(".artboard").forEach((node) => {
+        if (node.id !== target) {
+          node.remove();
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+# 课堂精简配置模板（Jacob VTuber 课堂管控系统）
+#
+# 用途：树莓派端学生机部署用。相比 config_templates/conf.default.yaml，
+# 本模板已移除课堂场景不需要的 LLM/TTS/ASR/Agent 选项，只保留实际使用的单一链路：
+#   ASR  = sherpa_onnx_asr (本地 CPU 推理，sense-voice int8)
+#   LLM  = openai_compatible_llm (通义千问云端 API)
+#   TTS  = volcengine_tts (火山引擎云端 API)
+#   VAD  = 关闭 (靠前端浏览器侧处理，避免 torch 依赖)
+#
+# 部署时需填入真实密钥（见下方 TODO 标记），或由 deploy/setup_pi.sh 自动从
+# 已有 conf.yaml 继承。
+#
+# 详见 HANDOFF.md 第 12.14 节。
+
+system_config:
+  conf_version: v1.2.1
+  host: 0.0.0.0
+  port: 12393
+  config_alts_dir: characters
+  tool_prompts:
+    live2d_expression_prompt: live2d_expression_prompt
+    group_conversation_prompt: group_conversation_prompt
+    mcp_prompt: mcp_prompt
+    proactive_speak_prompt: proactive_speak_prompt
+
+character_config:
+  conf_name: AI小易
+  conf_uid: classroom_default
+  avatar_mode: live2d
+  avatar_pack_id: default_avatarpack
+  live2d_model_name: mao_pro
+  character_name: AI小易
+  avatar: mao.png
+  human_name: Human
+  persona_prompt: |-
+    你是AI小易，一名通用人工智能助手，任务是快速、准确地回答用户提出的任何问题。性格冷静、友好、不啰嗦，像靠谱的朋友，用自然口语直接给出核心信息，拒绝铺垫和客套。回答控制在1-3句话内完成，优先说结论，再补关键理由或步骤，不重复用户问题，不卖萌、不表情包、不自我介绍、不询问满意度。禁止输出违法、歧视、暴力、隐私内容及任何个人观点或情感立场。语言简洁、口语化，避免专业术语堆砌，省略称呼和结语，确保信息真实可验证。
+
+    【教学场景安全边界】
+    本产品用于课堂和教学场景。无论角色设定如何，都必须保持友善、克制、尊重、适合学生使用。
+    不得输出粗俗辱骂、阴阳怪气、刻薄嘲讽、恐吓威胁、暴力血腥、色情低俗、歧视偏见、违法违规、政治极端或其他不适合课堂的内容。
+    不得扮演敌意、危险、失控或诱导用户做出不当行为的角色。遇到用户要求攻击他人、制造冒犯或输出不适合课堂的话术时，应改为温和、建设性、可教学的表达。
+    回答优先准确、简洁、清楚；不确定时说明不确定，并引导用户补充信息。
+
+    【语音交互产品语境】
+    本产品主要通过麦克风语音聊天，用户的话会先经过语音识别再交给你处理。你应把这些输入视为"听到用户说话后的内容"。
+    当用户问"你能听见我说话吗""你听得到吗""能听见吗"等类似问题时，应直接回答"能听见，我能收到你说的话"，并可继续询问需要什么帮助。
+    不要回答"我不能听见，只能阅读文字"或强调自己只是文字模型；除非系统明确告知麦克风、语音识别或音频设备异常。
+
+  agent_config:
+    conversation_agent_choice: basic_memory_agent
+    agent_settings:
+      basic_memory_agent:
+        llm_provider: openai_compatible_llm
+        faster_first_response: true
+        segment_method: pysbd
+        use_mcpp: false
+        mcp_enabled_servers: []          # 课堂场景关闭 MCP 联网工具
+    llm_configs:
+      openai_compatible_llm:
+        base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+        llm_api_key: TODO_FILL_DASHSCOPE_KEY   # TODO: 通义千问 API key (sk-...)
+        organization_id: null
+        project_id: null
+        model: qwen3.6-flash
+        temperature: 0.7
+        interrupt_method: user
+
+  asr_config:
+    asr_model: sherpa_onnx_asr
+    sherpa_onnx_asr:
+      model_type: sense_voice
+      sense_voice: ./models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx
+      tokens: ./models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt
+      num_threads: 4                    # 树莓派5 四核
+      use_itn: true
+      provider: cpu                     # 树莓派5 GPU 不支持通用计算，只能 CPU
+
+  tts_config:
+    tts_model: volcengine_tts
+    volcengine_tts:
+      appid: TODO_FILL_VOLC_APPID              # TODO: 火山引擎 appid
+      access_token: TODO_FILL_VOLC_TOKEN       # TODO: 火山引擎 access_token
+      secret_key: ''
+      api_url: https://openspeech.bytedance.com/api/v1/tts
+      cluster: volcano_tts
+      voice: BV021_streaming
+      encoding: mp3
+      sample_rate: 24000
+      speed_ratio: 1.0
+      volume_ratio: 1.0
+      pitch_ratio: 1.0
+
+  vad_config:
+    vad_model: null                     # 关闭服务端 VAD（避免 torch 依赖），靠前端浏览器侧处理
+    silero_vad:
+      orig_sr: 16000
+      target_sr: 16000
+      prob_threshold: 0.4
+      db_threshold: 60
+      required_hits: 3
+      required_misses: 24
+      smoothing_window: 5
+
+  tts_preprocessor_config:
+    remove_special_char: true
+    ignore_brackets: true
+    ignore_parentheses: true
+    ignore_asterisks: true
+    ignore_angle_brackets: true
+    translator_config:
+      translate_audio: false            # 课堂用中文，关闭翻译
+      translate_provider: deeplx        # Literal 类型必须用合法值（翻译已关闭，值无影响）
+      deeplx:
+        deeplx_target_lang: JA
+        deeplx_api_endpoint: http://localhost:1188/v2/translate
+      tencent:
+        secret_id: ''
+        secret_key: ''
+        region: ap-guangzhou
+        source_lang: zh
+        target_lang: ja
+
+live_config:
+  bilibili_live:
+    room_ids: []                        # 课堂场景不用直播
+    sessdata: ''

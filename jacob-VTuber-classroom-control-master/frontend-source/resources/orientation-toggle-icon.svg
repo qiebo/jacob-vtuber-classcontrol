@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="切换横竖屏">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="accentA" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <linearGradient id="accentB" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="116" height="116" rx="28" fill="url(#bg)"/>
+  <rect x="22" y="58" width="58" height="36" rx="10" fill="none" stroke="url(#accentA)" stroke-width="6"/>
+  <rect x="64" y="24" width="30" height="58" rx="10" fill="none" stroke="url(#accentB)" stroke-width="6"/>
+  <path d="M48 42c8-10 18-15 31-15" fill="none" stroke="#e2e8f0" stroke-width="5" stroke-linecap="round"/>
+  <path d="M73 20l10 7-9 8" fill="none" stroke="#e2e8f0" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M82 89c-9 9-19 13-31 13" fill="none" stroke="#e2e8f0" stroke-width="5" stroke-linecap="round"/>
+  <path d="M57 108l-10-7 9-8" fill="none" stroke="#e2e8f0" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

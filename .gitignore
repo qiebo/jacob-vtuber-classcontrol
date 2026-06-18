@@ -1,0 +1,147 @@
+# ============================================================================
+# Jacob VTuber Classroom Control - .gitignore
+# ============================================================================
+
+# -- Python --
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.pyc
+
+# -- Virtual envs --
+teacher-venv/
+.venv/
+venv/
+env/
+
+# -- Node / Frontend --
+node_modules/
+jacob-VTuber-classroom-control-master/frontend-source/dist/
+jacob-VTuber-classroom-control-master/frontend-source/out/
+jacob-VTuber-classroom-control-master/frontend-source/dist-electron/
+*.log
+
+# -- IDE / Editor --
+.vscode/
+.idea/
+*.swp
+*.swo
+*.iml
+
+# -- OS --
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# -- Backups (大量备份文件污染仓库) --
+*.bak
+*.bak.*
+conf.yaml.bak.*
+conf.yaml.preClean.bak.*
+conf.yaml.preM1.bak.*
+classroom_data.preM6.bak.*
+*.disabled
+.m1_backup/
+
+# -- Sensitive runtime data (含密钥/真实运行时配置) --
+classroom_data/
+teacher_console_data/
+collections/
+chat_history/
+logs/
+cache/
+models/
+
+# 真实运行时 conf.yaml 含密钥，不入库；模板见 config_templates/
+jacob-VTuber-classroom-control-master/conf.yaml
+conf.yaml
+.classroom.env
+.env
+
+# 下载到本地的部署快照（含密钥）
+conf.yaml.pi-deployed
+
+# -- 旧项目原始包/视频/截图（不属于本次开发产物） --
+jacob-VTuber-classroom-control-master.zip
+jacob-vtuber-latest.tar.gz
+avatarpack_export.zip
+*.mp4
+*.mov
+*.avi
+task*.png
+哪吒.mp4
+孙悟空.jpg
+
+# -- 旧项目克隆（避免与 master 子目录混淆） --
+jacob-VTuber-classroom-control/
+jacob-VTuber-main/
+jacob-VTuber-ui-redesign/
+avatarpack-video-preprocessor/
+
+# -- Avatar pack 二进制资源（体积大） --
+jacob-VTuber-classroom-control-master/avatar_packs/*/character.zip
+jacob-VTuber-classroom-control-master/avatar_packs/*/preview.mp4
+jacob-VTuber-classroom-control-master/live2d-models/
+
+# -- 临时/调试 --
+tmp/
+output/
+*.tmp
+_tmp_*
+_dirlist.txt
+_ssh_test.bat
+plink.exe
+raspi_hostkey.pub
+.ssh_known_hosts
+
+# -- 其他 --
+*.zip
+!**/config_templates/*.zip   # 允许模板里的 zip
+package-lock.json
+.workbuddy/
+.playwright-mcp/
+
+# -- 不属于本项目的硬件文件夹 --
+rdk\ x5/
+rk3576/
+
+# -- Word/Excel 配置文档（可能含密钥） --
+API*.docx
+API*.xlsx
+
+# -- Windows 保留名误创建（被 cmd 重定向 2>nul 字面化产生）--
+/nul
+/con
+/aux
+/prn
+
+# -- 历史调试遗留（live2d 调试时的根目录散落文件） --
+cdp_*.py
+fix_live2d_catalog.py
+fix_shell_scripts.py
+live2d_browser_probe.js
+check_live2d_refs.py
+minimal_classroom_server.py
+current_pi_snapshot*.png
+tiny_snapshot.*
+audit_pi_deploy.py
+summarize_audit.py
+ws_probe.py
+test_asr_model.py
+test-distribute.txt
+restart_after_live2d_fix.sh
+restore_avatar_pack.sh
+start_chromium_kiosk*.sh
+start_after_audio_fix.sh
+start_pi_server.sh
+deploy_upgrade.sh
+device-pi01.json
+HANDOFF_classroom_tab_refresh.md
+jacob-new-code.tar.gz

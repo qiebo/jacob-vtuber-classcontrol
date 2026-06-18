@@ -1,0 +1,2 @@
+rc=$?
+-rw-rw-r-- 1 yb yb 7.5K  6月16日 14:28 /tmp/audit_pi_deploy.json
