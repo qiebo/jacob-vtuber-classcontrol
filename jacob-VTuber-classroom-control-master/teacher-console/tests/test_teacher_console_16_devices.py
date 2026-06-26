@@ -75,6 +75,11 @@ def build_simulated_student(device_id: str) -> FastAPI:
         state["uploaded_size"] = len(content)
         return {"file": {"name": file.filename, "size": len(content)}}
 
+    @app.post("/classroom/profile/save")
+    async def save(x_classroom_token: str | None = Header(default=None)):
+        authorize(x_classroom_token)
+        return {"profile": {"username": device_id}}
+
     @app.get("/classroom/profile/{username}/export")
     async def export(
         username: str,

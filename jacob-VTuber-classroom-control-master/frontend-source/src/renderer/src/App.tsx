@@ -34,6 +34,7 @@ import ClassroomStatusBar from "./components/classroom/classroom-status-bar";
 import ClassroomLockOverlay from "./components/classroom/classroom-lock-overlay";
 import ClassroomSnapshotUploader from "./components/classroom/classroom-snapshot-uploader";
 import ClassroomGate from "./components/classroom/classroom-gate";
+import WorkspaceInboxListener from "./components/classroom/workspace-inbox-listener";
 import Subtitle from "./components/canvas/subtitle";
 import { ModeProvider, useMode } from "./context/mode-context";
 import { AvatarPack } from "./components/canvas/avatar-pack";
@@ -248,6 +249,7 @@ function AppWithGlobalStyles(): JSX.Element {
                                     <ClassroomProvider>
                                       <Toaster />
                                       <ClassroomGate>
+                                        <WorkspaceInboxListener />
                                         <AppContent />
                                         <ClassroomSnapshotUploader />
                                         <ClassroomLockOverlay />

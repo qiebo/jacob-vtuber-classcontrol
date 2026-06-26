@@ -172,3 +172,28 @@ class StudentClient:
         if not isinstance(payload, dict):
             raise ValueError("Invalid file upload response")
         return payload
+
+    async def restore_workspace(
+        self,
+        device: Device,
+        path: Path,
+        filename: str,
+    ) -> dict[str, Any]:
+        """下发作品 ZIP 并触发学生端 /workspace/restore（MVP T-5）。"""
+        with path.open("rb") as file_handle:
+            response = await self.http.post(
+                f"{device.base_url.rstrip('/')}/workspace/inbox",
+                headers=self._headers(device.token),
+                files={"file": (filename, file_handle, "application/zip")},
+                timeout=httpx.Timeout(
+                    connect=self.timeout.connect,
+                    read=60.0,
+                    write=120.0,
+                    pool=3.0,
+                ),
+            )
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise ValueError("Invalid workspace restore response")
+        return payload

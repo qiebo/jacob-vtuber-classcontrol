@@ -5,6 +5,7 @@ import json
 import shutil
 import zipfile
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, File, UploadFile
@@ -35,6 +36,9 @@ if TYPE_CHECKING:
 
 # 存档点 ZIP 大小上限（含素材全量打包，放宽到 100MB）
 MAX_PACK_BYTES = 100 * 1024 * 1024
+INBOX_DIR = Path("classroom_data") / "inbox"
+INBOX_ZIP = INBOX_DIR / "pending_workspace.zip"
+INBOX_META = INBOX_DIR / "pending_workspace.json"
 
 
 class CreateSaveRequest(BaseModel):
@@ -43,6 +47,59 @@ class CreateSaveRequest(BaseModel):
 
 def _save_id_from_time() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+
+def _restore_zip_content_to_username(content: bytes, target_username: str) -> None:
+    """把作品 ZIP 恢复到当前登录 username 下。
+
+    教师下发的作品包可能来自其他学生；应用到当前学生时必须保留当前 username，
+    避免把当前会话切换成 ZIP 原作者。
+    """
+    import yaml
+
+    target_username = ensure_safe_username(target_username)
+    buf = io.BytesIO(content)
+    with zipfile.ZipFile(buf) as archive:
+        names = set(archive.namelist())
+        if "profile.yaml" not in names:
+            raise ValueError("ZIP 缺少 profile.yaml")
+        target_dir = profile_dir_for_username(target_username)
+        target_dir.mkdir(parents=True, exist_ok=True)
+        for child in target_dir.iterdir():
+            if child.name == "saves":
+                continue
+            if child.is_dir():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
+        base = target_dir.resolve()
+        for member in archive.infolist():
+            if member.is_dir():
+                continue
+            dest = (target_dir / member.filename).resolve()
+            if not dest.is_relative_to(base):
+                continue
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            data = archive.read(member.filename)
+            if member.filename == "profile.yaml":
+                profile_data = yaml.safe_load(data) or {}
+                profile_data["username"] = target_username
+                cc = profile_data.setdefault("character_config", {})
+                if isinstance(cc, dict):
+                    cc["conf_uid"] = target_username
+                data = yaml.safe_dump(
+                    profile_data,
+                    allow_unicode=True,
+                    sort_keys=False,
+                ).encode("utf-8")
+            elif member.filename == "manifest.json":
+                try:
+                    manifest = json.loads(data.decode("utf-8"))
+                    manifest["username"] = target_username
+                    data = json.dumps(manifest, ensure_ascii=False, indent=2).encode("utf-8")
+                except Exception:
+                    pass
+            dest.write_bytes(data)
 
 
 def init_workspace_routes(default_context_cache: ServiceContext) -> APIRouter:
@@ -239,6 +296,70 @@ def init_workspace_routes(default_context_cache: ServiceContext) -> APIRouter:
         if store.get(save_id) is None:
             return JSONResponse({"error": "存档点不存在"}, status_code=404)
         store.delete(save_id)
+        return JSONResponse({"ok": True})
+
+    # --- 教师下发作品包收件箱（MVP T-5：学生确认后再应用）---
+    @router.post("/inbox")
+    async def workspace_inbox_upload(file: UploadFile = File(...)):
+        try:
+            content = await read_upload_limited(file, MAX_PACK_BYTES)
+            if not (file.filename or "").lower().endswith(".zip"):
+                return JSONResponse({"error": "Only .zip workspace packages are supported"}, status_code=400)
+            # 先验证 ZIP 基本结构
+            with zipfile.ZipFile(io.BytesIO(content)) as archive:
+                if "profile.yaml" not in set(archive.namelist()):
+                    return JSONResponse({"error": "ZIP 缺少 profile.yaml"}, status_code=400)
+            INBOX_DIR.mkdir(parents=True, exist_ok=True)
+            INBOX_ZIP.write_bytes(content)
+            meta = {
+                "filename": file.filename or "workspace.zip",
+                "created_at": utc_now_iso(),
+                "size": len(content),
+            }
+            INBOX_META.write_text(
+                json.dumps(meta, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            return JSONResponse({"pending": True, "package": meta})
+        except ValueError as exc:
+            return JSONResponse({"error": str(exc)}, status_code=400)
+        except zipfile.BadZipFile:
+            return JSONResponse({"error": "Invalid zip file"}, status_code=400)
+
+    @router.get("/inbox")
+    async def workspace_inbox_status():
+        if not INBOX_ZIP.is_file() or not INBOX_META.is_file():
+            return JSONResponse({"pending": False, "package": None})
+        try:
+            meta = json.loads(INBOX_META.read_text(encoding="utf-8"))
+        except Exception:
+            meta = {"filename": "workspace.zip", "created_at": None, "size": INBOX_ZIP.stat().st_size}
+        return JSONResponse({"pending": True, "package": meta})
+
+    @router.post("/inbox/apply")
+    async def workspace_inbox_apply():
+        username = _require_username()
+        if not username:
+            return JSONResponse({"error": "No current classroom profile"}, status_code=400)
+        if not INBOX_ZIP.is_file():
+            return JSONResponse({"error": "No pending workspace package"}, status_code=404)
+        try:
+            _restore_zip_content_to_username(INBOX_ZIP.read_bytes(), username)
+            profile = get_profile(username)
+            if profile is None:
+                return JSONResponse({"error": "恢复后档案不可读"}, status_code=500)
+            await apply_profile_to_open_contexts(default_context_cache, profile)
+            save_runtime_state(current_username=username)
+            INBOX_ZIP.unlink(missing_ok=True)
+            INBOX_META.unlink(missing_ok=True)
+            return JSONResponse({"username": username, "profile": profile.model_dump()})
+        except Exception as exc:
+            return JSONResponse({"error": f"应用作品包失败: {exc}"}, status_code=500)
+
+    @router.delete("/inbox")
+    async def workspace_inbox_discard():
+        INBOX_ZIP.unlink(missing_ok=True)
+        INBOX_META.unlink(missing_ok=True)
         return JSONResponse({"ok": True})
 
     return router

@@ -442,18 +442,26 @@ export function ClassroomProvider({ children }: { children: React.ReactNode }) {
   // --- auth ---
   const refreshAuth = useCallback(async () => {
     try {
-      const me = await requestJson<{ username: string | null; pending_sync?: boolean }>(
-        "/auth/me",
-      );
+      const me = await requestJson<{
+        username: string | null;
+        pending_sync?: boolean;
+        profile?: { character_config?: Record<string, unknown>; workspace_state?: Record<string, unknown> } | null;
+      }>("/auth/me");
       setAuthUsername(me.username);
       setPendingSync(Boolean(me.pending_sync));
       if (me.username) {
+        if (me.profile?.character_config) {
+          await applyCharacterConfig(me.profile.character_config);
+        }
+        if (me.profile?.workspace_state) {
+          applyWorkspaceState(me.profile.workspace_state);
+        }
         refreshStatus().catch(() => undefined);
       }
     } catch {
       setAuthUsername(null);
     }
-  }, [requestJson, refreshStatus]);
+  }, [requestJson, applyCharacterConfig, applyWorkspaceState, refreshStatus]);
 
   const checkUsername = useCallback(async (username: string) => {
     const payload = await requestJson<{

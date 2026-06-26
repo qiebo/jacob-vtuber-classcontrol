@@ -10,6 +10,7 @@ const autoRefresh = document.querySelector("#auto-refresh");
 const fileInput = document.querySelector("#distribution-file");
 const fileName = document.querySelector("#file-name");
 const distributeButton = document.querySelector("#distribute-file");
+const restoreWorkspaceButton = document.querySelector("#restore-workspace");
 const selectionSummary = document.querySelector("#selection-summary");
 const lastRefresh = document.querySelector("#last-refresh");
 
@@ -127,6 +128,7 @@ function syncSelectionControls() {
   selectionSummary.textContent = `已选 ${selectedCount} 台`;
   stats.selected.textContent = String(selectedCount);
   distributeButton.disabled = selectedCount === 0 || !fileInput.files?.length;
+  restoreWorkspaceButton.disabled = selectedCount === 0 || !fileInput.files?.length || !fileInput.files?.[0]?.name?.toLowerCase().endsWith(".zip");
   document.querySelectorAll("#batch-lock, #batch-unlock, #batch-collect").forEach((button) => {
     button.disabled = selectedCount === 0;
   });
@@ -365,6 +367,21 @@ async function distributeFile() {
   setMessage(summaryText(result.summary, `文件“${result.filename || file.name}”分发`), Number(result.summary?.failed) > 0);
 }
 
+async function restoreWorkspacePackage() {
+  const file = fileInput.files?.[0];
+  if (!file) throw new Error("请先选择作品包 ZIP");
+  if (!file.name.toLowerCase().endsWith(".zip")) {
+    throw new Error("作品包必须是 .zip 文件");
+  }
+  const payload = selectedPayload();
+  const body = new FormData();
+  body.append("file", file);
+  body.append("device_ids", JSON.stringify(payload.device_ids));
+  setMessage(`正在下发并应用作品包 ${file.name}...`);
+  const result = await requestJson("/api/batch/workspace/restore", { method: "POST", body });
+  setMessage(summaryText(result.summary, `作品包“${result.filename || file.name}”应用`), Number(result.summary?.failed) > 0);
+}
+
 function discoveryIdentity(item) {
   const status = item.status || {};
   const device = item.device || {};
@@ -528,35 +545,12 @@ document.querySelector("#batch-unlock").addEventListener("click", () => {
 document.querySelector("#batch-collect").addEventListener("click", () => {
   batchCollect().catch((error) => setMessage(formatError(error), true));
 });
-document.querySelector("#batch-assign-class").addEventListener("click", () => {
-  const classId = document.querySelector("#batch-class-select").value;
-  if (!classId) {
-    setMessage("请先在下拉中选择目标班级", true);
-    return;
-  }
-  batchAssignClass(classId).catch((error) => setMessage(formatError(error), true));
-});
-const classForm = document.querySelector("#class-form");
-if (classForm) {
-  classForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const name = classForm.elements.name.value.trim();
-    if (!name) return;
-    try {
-      await requestJson("/api/classes", {
-        method: "POST",
-        body: JSON.stringify({ name }),
-      });
-      classForm.elements.name.value = "";
-      await loadClasses();
-      setMessage(`已创建班级「${name}」`);
-    } catch (error) {
-      setMessage(formatError(error), true);
-    }
-  });
-}
 distributeButton.addEventListener("click", () => {
   distributeFile().catch((error) => setMessage(formatError(error), true));
+});
+restoreWorkspaceButton.addEventListener("click", () => {
+  if (!confirm("确定要将该作品包应用到选中的学生机吗？这会覆盖学生端当前工作区。")) return;
+  restoreWorkspacePackage().catch((error) => setMessage(formatError(error), true));
 });
 autoRefresh.addEventListener("change", startAutoRefresh);
 

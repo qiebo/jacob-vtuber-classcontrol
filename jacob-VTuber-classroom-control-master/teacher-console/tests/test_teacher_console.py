@@ -119,6 +119,8 @@ def test_batch_lock_and_collect_return_per_device_results(tmp_path: Path):
             if host == "bad.local":
                 return httpx.Response(503, request=request)
             return httpx.Response(200, json={"locked": True}, request=request)
+        if request.url.path == "/classroom/profile/save":
+            return httpx.Response(200, json={"profile": {"username": f"profile-{host}"}}, request=request)
         if request.url.path == "/classroom/status":
             return httpx.Response(
                 200,

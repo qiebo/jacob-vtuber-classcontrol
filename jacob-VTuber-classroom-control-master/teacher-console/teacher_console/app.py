@@ -340,6 +340,8 @@ def create_app(
         username = status.get("current_username")
         if not username:
             raise ValueError("No current classroom profile on device")
+        # MVP：收取前先触发学生端保存，避免刚修改但未手动保存导致收取旧状态
+        await client.force_save(device)
         path = await client.collect_profile(
             device, str(username), store.collections_dir
         )
@@ -423,6 +425,61 @@ def create_app(
             await file.close()
             return json_error(str(exc), 400)
         return await distribute_file(devices, file)
+
+    async def restore_workspace_package(
+        devices: list[Device],
+        upload: UploadFile,
+    ) -> JSONResponse | dict[str, Any]:
+        """下发作品 ZIP 并触发学生端一键恢复（MVP T-5）。"""
+        try:
+            path, filename, _ = await save_upload(upload, store.data_dir)
+            if not filename.lower().endswith(".zip"):
+                raise ValueError("Only .zip workspace packages are supported")
+        except ValueError as exc:
+            return json_error(str(exc), 413)
+        except Exception as exc:
+            return json_error(str(exc), 400)
+
+        async def send(device: Device) -> dict[str, Any]:
+            response = await client.restore_workspace(device, path, filename)
+            return {"response": response}
+
+        try:
+            results = await run_device_operations(devices, send)
+            return {
+                "filename": filename,
+                "results": results,
+                "summary": operation_summary(results),
+            }
+        finally:
+            try:
+                os.remove(path)
+            except FileNotFoundError:
+                pass
+
+    @app.post("/api/devices/{device_id}/workspace/restore")
+    async def restore_workspace_to_device(device_id: str, file: UploadFile = File(...)):
+        try:
+            device = store.get_device(device_id)
+        except KeyError:
+            await file.close()
+            return json_error("Device not found", 404)
+        return await restore_workspace_package([device], file)
+
+    @app.post("/api/batch/workspace/restore")
+    async def restore_workspace_to_batch(
+        file: UploadFile = File(...),
+        device_ids: str | None = Form(default=None),
+        group: str | None = Form(default=None),
+        all_devices: bool = Form(default=False, alias="all"),
+    ):
+        try:
+            selection = parse_multipart_selection(device_ids, group, all_devices)
+            devices = select_devices(store, selection)
+        except Exception as exc:
+            await file.close()
+            return json_error(str(exc), 400)
+        return await restore_workspace_package(devices, file)
 
     @app.post("/api/discover")
     async def discover(request: Request):
@@ -654,6 +711,8 @@ def create_app(
                                   "device_id": device.id, "ok": False,
                                   "error": "No current classroom profile"}
                     else:
+                        # MVP：流式收取同样先保存再导出
+                        await client.force_save(device)
                         path = await client.collect_profile(
                             device, str(username), store.collections_dir
                         )
