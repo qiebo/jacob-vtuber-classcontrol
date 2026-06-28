@@ -180,6 +180,15 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
           setAvatarPackId(message.avatar_pack_id);
         }
         let normalizedModelInfo = message.model_info;
+        if (normalizedModelInfo?.kScale !== undefined) {
+          const backendScale = Number(normalizedModelInfo.kScale);
+          normalizedModelInfo = {
+            ...normalizedModelInfo,
+            kScale: Number.isFinite(backendScale) && backendScale > 0
+              ? backendScale * 2
+              : 1,
+          };
+        }
         if (normalizedModelInfo?.url && !normalizedModelInfo.url.startsWith("http")) {
           const normalizedBaseUrl = (baseUrl || window.location.origin).replace(/\/+$/, "");
           const normalizedPath = normalizedModelInfo.url.startsWith("/")

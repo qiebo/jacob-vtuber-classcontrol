@@ -1,8 +1,7 @@
 import {
-  createContext, useContext, useState, useMemo,
+  createContext, useCallback, useContext, useState, useMemo,
 } from 'react';
 import { useLocalStorage } from '@/hooks/utils/use-local-storage';
-import { useConfig } from '@/context/character-config-context';
 
 /**
  * Model emotion mapping interface
@@ -105,8 +104,6 @@ export const Live2DConfigContext = createContext<Live2DConfigState | null>(null)
  * @param {React.ReactNode} props.children - Child components
  */
 export function Live2DConfigProvider({ children }: { children: React.ReactNode }) {
-  const { confUid } = useConfig();
-
   const [isLoading, setIsLoading] = useState(DEFAULT_CONFIG.isLoading);
 
   const [modelInfo, setModelInfoState] = useLocalStorage<ModelInfo | undefined>(
@@ -116,29 +113,28 @@ export function Live2DConfigProvider({ children }: { children: React.ReactNode }
 
   // const [modelInfo, setModelInfoState] = useState<ModelInfo | undefined>(DEFAULT_CONFIG.modelInfo);
 
-  const setModelInfo = (info: ModelInfo | undefined) => {
+  const setModelInfo = useCallback((info: ModelInfo | undefined) => {
     if (!info?.url) {
       setModelInfoState(undefined);
       return;
     }
 
-    // Always use the scale defined in the incoming info object (from config)
-    const finalScale = Number(info.kScale || 0.5) * 2;
-    console.log("Setting model info with default scale:", finalScale);
+    const incomingScale = Number(info.kScale);
+    const finalScale = Number.isFinite(incomingScale) && incomingScale > 0
+      ? incomingScale
+      : 1;
 
-    setModelInfoState({
+    setModelInfoState((current) => ({
       ...info,
       kScale: finalScale,
-      pointerInteractive:
-        "pointerInteractive" in info
-          ? info.pointerInteractive
-          : (modelInfo?.pointerInteractive ?? true),
-      scrollToResize:
-        "scrollToResize" in info
-          ? info.scrollToResize
-          : (modelInfo?.scrollToResize ?? true),
-    });
-  };
+      pointerInteractive: "pointerInteractive" in info
+        ? info.pointerInteractive
+        : (current?.pointerInteractive ?? true),
+      scrollToResize: "scrollToResize" in info
+        ? info.scrollToResize
+        : (current?.scrollToResize ?? true),
+    }));
+  }, [setModelInfoState]);
 
   const contextValue = useMemo(
     () => ({
@@ -147,7 +143,7 @@ export function Live2DConfigProvider({ children }: { children: React.ReactNode }
       isLoading,
       setIsLoading,
     }),
-    [modelInfo, isLoading, setIsLoading],
+    [modelInfo, setModelInfo, isLoading, setIsLoading],
   );
 
   return (

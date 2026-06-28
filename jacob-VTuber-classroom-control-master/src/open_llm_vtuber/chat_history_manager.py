@@ -60,6 +60,13 @@ def _get_safe_history_path(conf_uid: str, history_uid: str) -> str:
     return full_path
 
 
+def _ensure_history_parent_dir(filepath: str) -> None:
+    """Ensure the parent directory for a history file exists."""
+    parent_dir = os.path.dirname(filepath)
+    if parent_dir:
+        os.makedirs(parent_dir, exist_ok=True)
+
+
 def create_new_history(conf_uid: str) -> str:
     """Create a new history file with a unique ID and return the history_uid"""
     if not conf_uid:
@@ -116,6 +123,7 @@ def store_message(
         return
 
     filepath = _get_safe_history_path(conf_uid, history_uid)
+    _ensure_history_parent_dir(filepath)
     logger.debug(f"Storing {role} message to {filepath}")
 
     history_data = []
@@ -177,13 +185,18 @@ def update_metadate(conf_uid: str, history_uid: str, metadata: dict) -> bool:
         return False
 
     filepath = _get_safe_history_path(conf_uid, history_uid)
+    _ensure_history_parent_dir(filepath)
     if not os.path.exists(filepath):
-        return False
+        history_data = []
+    else:
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                history_data = json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load metadata file: {e}")
+            history_data = []
 
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            history_data = json.load(f)
-
         if history_data and history_data[0]["role"] == "metadata":
             # Update existing metadata while preserving other fields
             history_data[0].update(metadata)
@@ -361,6 +374,7 @@ def rename_history_file(
 
     old_filepath = _get_safe_history_path(conf_uid, old_history_uid)
     new_filepath = _get_safe_history_path(conf_uid, new_history_uid)
+    _ensure_history_parent_dir(new_filepath)
 
     try:
         if os.path.exists(old_filepath):

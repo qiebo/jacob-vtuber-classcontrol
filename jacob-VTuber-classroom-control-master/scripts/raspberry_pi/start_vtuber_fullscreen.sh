@@ -106,33 +106,78 @@ wait_for_server_ready() {
   return 1
 }
 
-prefer_microphone_input_if_available() {
-  if ! command -v pactl >/dev/null 2>&1; then
-    return
+prefer_board_audio_devices() {
+  # KICKPI-K7 / RK3576 uses PipeWire + WirePlumber and exposes the built-in
+  # codec as rockchip-es8388. HDMI can otherwise become the default sink/source
+  # after reboot or display hotplug, which makes browser microphone capture fail.
+  local board_sink_name="alsa_output.platform-es8388-sound.HiFi__hw_rockchipes8388__sink"
+  local board_source_name="alsa_input.platform-es8388-sound.HiFi__hw_rockchipes8388__source"
+
+  if command -v wpctl >/dev/null 2>&1; then
+    local board_sink_id=""
+    local board_source_id=""
+    local audio_device_id=""
+
+    board_sink_id="$(
+      wpctl status 2>/dev/null | awk '
+        /Built-in Audio Headphones \+ Speaker/ {
+          gsub(/[.*]/, "", $1)
+          print $1
+          exit
+        }
+      '
+    )"
+    board_source_id="$(
+      wpctl status 2>/dev/null | awk '
+        /Built-in Audio Headset Microphone \+ Internal Microphone/ {
+          gsub(/[.*]/, "", $1)
+          print $1
+          exit
+        }
+      '
+    )"
+
+    # Disable display-audio devices so Chromium cannot restore playback to
+    # HDMI/DP instead of the board speaker codec.
+    while IFS= read -r audio_device_id; do
+      if wpctl inspect "${audio_device_id}" 2>/dev/null | grep -Eq 'device.name = "alsa_card\.platform-(hdmi|dp0)-sound"'; then
+        wpctl set-profile "${audio_device_id}" 0 >/dev/null 2>&1 || true
+      fi
+    done < <(
+      wpctl status 2>/dev/null | awk '
+        /^[[:space:]]*[0-9]+\./ {
+          id=$1
+          gsub(/[.*]/, "", id)
+          print id
+        }
+      '
+    )
+
+    if [[ -n "${board_sink_id}" ]]; then
+      wpctl set-default "${board_sink_id}" >/dev/null 2>&1 || true
+      wpctl set-volume "${board_sink_id}" 1.00 >/dev/null 2>&1 || true
+      echo "Preferred speaker sink: ${board_sink_name}"
+    fi
+
+    if [[ -n "${board_source_id}" ]]; then
+      wpctl set-default "${board_source_id}" >/dev/null 2>&1 || true
+      wpctl set-volume "${board_source_id}" 1.00 >/dev/null 2>&1 || true
+      echo "Preferred microphone source: ${board_source_name}"
+    fi
+
+    if [[ -n "${board_sink_id}" || -n "${board_source_id}" ]]; then
+      return
+    fi
   fi
 
-  local preferred_source=""
-  preferred_source="$(
-    pactl list short sources 2>/dev/null | awk '
-      /monitor/ { next }
-      /alsa_input\\.usb-|usb-.*analog/ { print $2; exit }
-      /wm8960/ { wm8960=$2 }
-      /alsa_input\\./ && fallback=="" { fallback=$2 }
-      END {
-        if (wm8960 != "") {
-          print wm8960
-        } else if (fallback != "") {
-          print fallback
-        }
-      }
-    '
-  )"
-
-  if [[ -n "${preferred_source}" ]]; then
-    pactl set-default-source "${preferred_source}" >/dev/null 2>&1 || true
-    pactl set-source-mute "${preferred_source}" 0 >/dev/null 2>&1 || true
-    pactl set-source-volume "${preferred_source}" 100% >/dev/null 2>&1 || true
-    echo "Preferred microphone source: ${preferred_source}"
+  if command -v pactl >/dev/null 2>&1; then
+    pactl set-default-sink "${board_sink_name}" >/dev/null 2>&1 || true
+    pactl set-sink-mute "${board_sink_name}" 0 >/dev/null 2>&1 || true
+    pactl set-sink-volume "${board_sink_name}" 100% >/dev/null 2>&1 || true
+    pactl set-default-source "${board_source_name}" >/dev/null 2>&1 || true
+    pactl set-source-mute "${board_source_name}" 0 >/dev/null 2>&1 || true
+    pactl set-source-volume "${board_source_name}" 100% >/dev/null 2>&1 || true
+    echo "Preferred board audio devices via pactl"
   fi
 }
 
@@ -195,7 +240,7 @@ launch_browser_fullscreen() {
   esac
 }
 
-prefer_microphone_input_if_available
+prefer_board_audio_devices
 start_server
 if ! wait_for_server_ready; then
   echo "Open-LLM-VTuber server did not become ready within 60 seconds."

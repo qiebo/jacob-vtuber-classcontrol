@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import {
+  useCallback, useEffect, useRef, useState,
+} from 'react';
 
 function parseStoredValue<T>(rawValue: string, initialValue: T): T {
   try {
@@ -44,10 +46,17 @@ export function useLocalStorage<T>(
     }
   });
 
-  const setValue = (value: T | ((val: T) => T)) => {
+  const storedValueRef = useRef(storedValue);
+
+  useEffect(() => {
+    storedValueRef.current = storedValue;
+  }, [storedValue]);
+
+  const setValue = useCallback((value: T | ((val: T) => T)) => {
     try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      const valueToStore = value instanceof Function ? value(storedValueRef.current) : value;
       const filteredValue = options?.filter ? options.filter(valueToStore) : valueToStore;
+      storedValueRef.current = valueToStore;
       setStoredValue(valueToStore);
       window.localStorage.setItem(key, JSON.stringify(filteredValue));
       window.dispatchEvent(new StorageEvent('storage', {
@@ -57,14 +66,16 @@ export function useLocalStorage<T>(
     } catch (error) {
       console.error(`Error setting localStorage key "${key}":`, error);
     }
-  };
+  }, [key, options?.filter]);
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
       if (event.key !== key || event.newValue === null) {
         return;
       }
-      setStoredValue(parseStoredValue(event.newValue, initialValue));
+      const nextValue = parseStoredValue(event.newValue, initialValue);
+      storedValueRef.current = nextValue;
+      setStoredValue(nextValue);
     };
     window.addEventListener('storage', handleStorage);
     return () => window.removeEventListener('storage', handleStorage);

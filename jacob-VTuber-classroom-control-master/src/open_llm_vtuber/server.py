@@ -178,16 +178,15 @@ class WebSocketServer:
         """Asynchronously load the service context from config.
         Calling this function is needed if default_context_cache was not provided to the constructor."""
         await self.default_context_cache.load_from_config(self.config)
-        # 启动离线同步后台循环（M2：开发文档 §5.2）
-        try:
+        # Bind the task to Uvicorn's long-lived loop, not the temporary
+        # asyncio.run() loop used to execute initialize().
+        async def _start_sync_manager() -> None:
             sync_manager.start()
-        except RuntimeError:
-            # 无事件循环（如同步测试环境），跳过
-            pass
 
         async def _stop_sync_manager() -> None:
             await sync_manager.stop()
 
+        self.app.add_event_handler("startup", _start_sync_manager)
         self.app.add_event_handler("shutdown", _stop_sync_manager)
 
     @staticmethod

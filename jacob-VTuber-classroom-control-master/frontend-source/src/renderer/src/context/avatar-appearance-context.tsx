@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useMemo,
 } from "react";
@@ -28,22 +29,22 @@ export function AvatarAppearanceProvider({ children }: { children: React.ReactNo
     "default_avatarpack",
   );
 
-  const setAvatarMode = (mode: AvatarMode) => {
+  const setAvatarMode = useCallback((mode: AvatarMode) => {
     setAvatarModeInternal(mode);
-  };
+  }, [setAvatarModeInternal]);
 
-  const setAvatarPackId = (packId: string) => {
+  const setAvatarPackId = useCallback((packId: string) => {
     setAvatarPackIdInternal((packId || "").trim());
-  };
+  }, [setAvatarPackIdInternal]);
 
-  const activateLive2d = () => {
+  const activateLive2d = useCallback(() => {
     setAvatarModeInternal("live2d");
-  };
+  }, [setAvatarModeInternal]);
 
-  const activateAvatarPack = (packId: string) => {
+  const activateAvatarPack = useCallback((packId: string) => {
     setAvatarModeInternal("avatarpack");
     setAvatarPackIdInternal((packId || "default_avatarpack").trim());
-  };
+  }, [setAvatarModeInternal, setAvatarPackIdInternal]);
 
   const value = useMemo(
     () => ({
@@ -54,7 +55,14 @@ export function AvatarAppearanceProvider({ children }: { children: React.ReactNo
       activateLive2d,
       activateAvatarPack,
     }),
-    [avatarMode, avatarPackId],
+    [
+      activateAvatarPack,
+      activateLive2d,
+      avatarMode,
+      avatarPackId,
+      setAvatarMode,
+      setAvatarPackId,
+    ],
   );
 
   return (

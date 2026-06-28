@@ -145,3 +145,6 @@ deploy_upgrade.sh
 device-pi01.json
 HANDOFF_classroom_tab_refresh.md
 jacob-new-code.tar.gz
+
+# -- Kiosk browser runtime profiles --
+jacob-VTuber-classroom-control-master/.kiosk-profile*/

@@ -94,7 +94,7 @@ const defaultModelInfo = (name: string, url: string): ModelInfo => ({
   name,
   description: "",
   url,
-  kScale: 0.5,
+  kScale: 1,
   initialXshift: 0,
   initialYshift: 0,
   idleMotionGroupName: "Idle",
@@ -226,14 +226,12 @@ export function ClassroomProvider({ children }: { children: React.ReactNode }) {
       return undefined;
     }
 
-    const fallback = modelInfo?.name === modelName ? modelInfo : undefined;
     return {
       ...defaultModelInfo(modelName, normalizeAssetUrl(baseUrl, catalogModel.url)),
-      ...(fallback || {}),
       name: modelName,
       url: normalizeAssetUrl(baseUrl, catalogModel.url),
     };
-  }, [baseUrl, modelInfo, requestJson]);
+  }, [baseUrl, requestJson]);
 
   const applyCharacterConfig = useCallback(async (characterConfig: Record<string, unknown>) => {
     const stringValue = (key: string): string =>
